@@ -5,13 +5,9 @@ import (
 	"net/http"
 )
 
-var templ *template.Template
+var templ = template.Must(template.ParseGlob("templates/**/*.html"))
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	templ = template.Must(template.ParseGlob("templates/layouts/*.html"))
-	templ = template.Must(templ.ParseGlob("templates/partials/*.html"))
-	templ = template.Must(templ.ParseGlob("templates/pages/*.html"))
-
 	err := templ.ExecuteTemplate(w, "base.html", nil)
 
 	if err != nil {
