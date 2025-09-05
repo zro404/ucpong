@@ -17,5 +17,6 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", serveHome)
+	registerPartialRoutes()
 	http.ListenAndServe(":8000", nil)
 }

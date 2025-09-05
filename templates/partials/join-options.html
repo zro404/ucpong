@@ -1,0 +1,17 @@
+<div id="join-options" class="flex flex-col gap-3 lg:w-[25vw]">
+  <button
+    hx-get="/ui/join-input"
+    hx-target="#join-options"
+    hx-swap="outerHTML"
+    class="w-full h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded"
+  >
+    ENTER GAME CODE
+  </button>
+  <button
+    hx-get="/new"
+    hx-target="#root"
+    class="w-full h-14 text-lg bg-red-600 hover:bg-red-700 transition-colors px-6 py-3 rounded"
+  >
+    CREATE NEW GAME
+  </button>
+</div>

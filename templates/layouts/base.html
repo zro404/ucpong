@@ -5,10 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UCPong</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+      body {
+        font-family: "JetBrains Mono", monospace;
+        background-color: #000;
+        color: #fff;
+      }
+
+      .pixel-perfect {
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+      }
+    </style>
   </head>
-  <body class="">
+  <body
+    id="root"
+    class="bg-black text-white flex justify-center items-center h-svh"
+  >
     {{block "content" .}} {{end}} {{template "footer.html"}}
   </body>
 </html>

@@ -1,0 +1,26 @@
+<form id="join-input" hx-post="/join" class="space-y-3 lg:w-[25vw]">
+  <input
+    type="text"
+    name="gameCode"
+    placeholder="Enter game code..."
+    class="w-full h-14 text-lg bg-black border-2 border-gray-300 focus:border-red-500 focus:outline-none text-center px-4 py-3 rounded text-white"
+    required
+  />
+
+  <div class="flex gap-3">
+    <button
+      hx-get="/ui/join-options"
+      hx-target="#join-input"
+      hx-swap="outerHTML"
+      class="w-full h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded"
+    >
+      BACK
+    </button>
+    <button
+      type="submit"
+      class="w-full h-14 text-lg bg-red-600 hover:bg-red-700 transition-colors px-6 py-3 rounded"
+    >
+      JOIN
+    </button>
+  </div>
+</form>

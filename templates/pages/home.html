@@ -1,3 +1,15 @@
 {{define "content"}}
-<h1>Hello Gophers!</h1>
+<div class="flex flex-col gap-14">
+  <div class="flex flex-col gap-4 text-center">
+    <h1 class="text-6xl font-bold">UCPONG</h1>
+    <p class="text-lg text-gray-400">MULTIPLAYER RETRO ARCADE</p>
+  </div>
+  {{ template "join-options.html" }}
+  <!-- Decorative Elements -->
+  <div class="flex justify-center items-center space-x-8 opacity-50">
+    <div class="w-2 h-16 bg-white"></div>
+    <div class="w-4 h-4 bg-white rounded-full"></div>
+    <div class="w-2 h-16 bg-white"></div>
+  </div>
+</div>
 {{end}} {{template "base.html"}}
