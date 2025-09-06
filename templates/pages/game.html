@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  {{ template "head.html" }}
+  <body class="bg-black text-white h-svh">
+    <div class="p-8 pt-10 h-svh">
+      <a
+        href="/"
+        class="w-full h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded"
+      >
+        BACK TO MENU
+      </a>
+      <div
+        class="flex flex-col justify-center items-center gap-10 h-full pb-20"
+      >
+        <div class="flex items-center justify-center gap-10">
+          <div class="flex flex-col items-center gap-3">
+            <p class="text-xl">PLAYER 1</p>
+            <p class="text-7xl text-red-500 font-bold">0</p>
+          </div>
+          <p class="text-3xl">:</p>
+          <div class="flex flex-col items-center gap-3">
+            <p class="text-xl">PLAYER 2</p>
+            <p class="text-7xl text-red-500 font-bold">0</p>
+          </div>
+        </div>
+        <canvas
+          id="canvas"
+          height="600"
+          width="1200"
+          class="border border-2"
+        ></canvas>
+      </div>
+    </div>
+    {{ template "footer.html" }}
+    <script src="/scripts/game.js"></script>
+  </body>
+</html>
