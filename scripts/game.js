@@ -1,8 +1,6 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-console.log("Canvas initialized");
-
 const height = canvas.height;
 const width = canvas.width;
 
@@ -17,7 +15,6 @@ const animationLoop = () => {
 
   ctx.fillStyle = "#0000FF";
   ctx.fillRect(data.p1.x, data.p1.y, data.p1.width, data.p1.height);
-  console.log(data.p1.x, data.p1.y, data.p1.width, data.p1.height);
 
   ctx.fillStyle = "#FF0000";
   ctx.fillRect(data.p2.x, data.p2.y, data.p2.width, data.p2.height);
@@ -31,3 +28,24 @@ const animationLoop = () => {
 };
 
 requestAnimationFrame(animationLoop);
+
+let ws = new WebSocket("ws://" + window.location.host + "/ws");
+ws.onerror = (error) => {
+  console.error("WebSocket error:", error);
+};
+
+ws.onclose = () => {
+  console.log("WebSocket connection closed");
+};
+
+ws.onopen = () => {
+  console.log("WebSocket connection established");
+  const pathParts = window.location.pathname.split("/");
+  const roomCode =
+    pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+  ws.send(JSON.stringify({ roomCode }));
+};
+
+ws.onmessage = (event) => {
+  console.log("Message from server:", event.data);
+};

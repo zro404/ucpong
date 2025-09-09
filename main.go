@@ -3,6 +3,9 @@ package main
 import (
 	"html/template"
 	"net/http"
+
+	"github.com/zro404/ucpong/game"
+	"golang.org/x/net/websocket"
 )
 
 var templ = template.Must(template.ParseGlob("templates/**/*.html"))
@@ -23,12 +26,16 @@ func serveGamePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	rd := game.NewRoomDirectory()
+
 	fs := http.FileServer(http.Dir("./scripts"))
 	http.Handle("/scripts/", http.StripPrefix("/scripts/", fs))
 
 	http.HandleFunc("/", serveHome)
-	http.Handle("/new", http.RedirectHandler("/game", http.StatusTemporaryRedirect))
-	http.HandleFunc("/game", serveGamePage)
+	http.Handle("/new", http.RedirectHandler("/game/"+rd.NewRoom(), http.StatusTemporaryRedirect))
+	http.HandleFunc("/game/", serveGamePage)
+
+	http.Handle("/ws", websocket.Handler(rd.HandleNewPlayer))
 
 	registerPartialRoutes()
 	http.ListenAndServe(":8000", nil)
