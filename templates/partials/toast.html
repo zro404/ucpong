@@ -1,0 +1,22 @@
+{{ define "toast" }}
+<div
+  id="toast"
+  class="absolute top-5 px-5 py-3 bg-red-400 rounded-lg text-black shadow-sm shadow-red-300 flex items-center gap-2"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="25px"
+    height="25px"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <path
+      d="M20 20L4 4.00003M20 4L4.00002 20"
+      stroke="#000000"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+  </svg>
+  <p>{{.message}}</p>
+</div>
+{{ end }}

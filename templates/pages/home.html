@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   {{ template "head.html" }}
-  <body class="bg-black text-white flex justify-center items-center h-svh">
+  <body
+    id="root"
+    class="bg-black text-white flex justify-center items-center h-svh"
+  >
     <div class="flex flex-col gap-14">
       <div class="flex flex-col gap-4 text-center">
         <h1 class="text-6xl font-bold">UCPONG</h1>
@@ -16,5 +19,6 @@
       </div>
     </div>
     {{ template "footer.html" }}
+    <div id="toast"></div>
   </body>
 </html>
