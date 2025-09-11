@@ -51,6 +51,13 @@ func handleJoinForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if (*rd)[gameCode].IsFull() {
+		templ.ExecuteTemplate(w, "toast", map[string]string{
+			"message": "Game is full",
+		})
+		return
+	}
+
 	w.Header().Set("HX-Redirect", "/game/"+gameCode)
 }
 

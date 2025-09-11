@@ -1,6 +1,10 @@
 package game
 
-import "golang.org/x/net/websocket"
+import (
+	"fmt"
+
+	"golang.org/x/net/websocket"
+)
 
 type Ball struct {
 	x, y   int
@@ -28,6 +32,7 @@ func (p *Player) readLoop() {
 			p.conn.Close()
 			return
 		}
+		fmt.Println(msg)
 		// TODO Handle input
 	}
 }

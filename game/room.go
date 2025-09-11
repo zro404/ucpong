@@ -16,19 +16,55 @@ type Room struct {
 	ball *Ball
 }
 
-func (room *Room) AddPlayer(ws *websocket.Conn) bool {
+func (room *Room) broadcastState() {
+	state := GameState{
+		BallX:   room.ball.x,
+		BallY:   room.ball.y,
+		Player1: room.p1.pos,
+		Player2: room.p2.pos,
+	}
+	if room.p1 != nil {
+		websocket.JSON.Send(room.p1.conn, state)
+	}
+	if room.p2 != nil {
+		websocket.JSON.Send(room.p2.conn, state)
+	}
+}
+
+func (room *Room) StartGame() {
+	ball := room.ball
+	ball.vx = 10
+	ball.vy = 10
+
+	for {
+		ball.x += ball.vx
+		ball.y += ball.vy
+
+		if ball.y > 100 || ball.y < -100 {
+			ball.vy = -ball.vy
+		}
+		room.broadcastState()
+	}
+}
+
+func (room *Room) IsFull() bool {
+	return room.p1 != nil && room.p2 != nil
+}
+
+func (room *Room) AddPlayer(ws *websocket.Conn) (*Player, bool) {
 	player := NewPlayer(ws)
 	if room.p1 == nil {
 		room.p1 = player
-		player.readLoop()
-		return true
+		return player, true
 	} else if room.p2 == nil {
 		room.p2 = player
-		player.readLoop()
-		return true
+		// Start the game
+		go room.StartGame()
+
+		return player, true
 	}
 
-	return false
+	return nil, false
 }
 
 func (rd *RoomDirectory) NewRoom() string {
@@ -69,11 +105,12 @@ func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {
 		return
 	}
 
-	ok = room.AddPlayer(ws)
+	player, ok := room.AddPlayer(ws)
 	if !ok {
 		websocket.JSON.Send(ws, ErrorMsg{false, "Room Full!"})
 		ws.Close()
 		return
 	}
 
+	player.readLoop()
 }
