@@ -6,13 +6,19 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+const WIDTH int = 1000
+const HEIGHT int = 600
+const RADIUS int = 15
+const VX = 15
+const VY = 10
+
 type Ball struct {
 	x, y   int
 	vx, vy int
 }
 
 func NewBall() *Ball {
-	return &Ball{0, 0, 0, 0}
+	return &Ball{WIDTH / 2, HEIGHT / 2, VX, VY}
 }
 
 type Player struct {

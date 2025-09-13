@@ -1,5 +1,11 @@
 <div id="join-options" class="flex flex-col gap-3 lg:w-[25vw]">
   <button
+    hx-get="/random"
+    class="w-full h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded"
+  >
+    RANDOM GAME
+  </button>
+  <button
     hx-get="/ui/join-input"
     hx-target="#join-options"
     hx-swap="outerHTML"

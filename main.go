@@ -43,7 +43,7 @@ func handleJoinForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := (*rd)[gameCode]
+	_, ok := (*rd).Rooms[gameCode]
 	if !ok {
 		templ.ExecuteTemplate(w, "toast", map[string]string{
 			"message": "Game not found",
@@ -51,13 +51,18 @@ func handleJoinForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if (*rd)[gameCode].IsFull() {
+	if (*rd).Rooms[gameCode].IsFull() {
 		templ.ExecuteTemplate(w, "toast", map[string]string{
-			"message": "Game is full",
+			"message": "Room is full",
 		})
 		return
 	}
 
+	w.Header().Set("HX-Redirect", "/game/"+gameCode)
+}
+
+func handleRandomGame(w http.ResponseWriter, r *http.Request) {
+	gameCode := (*rd).FindGame()
 	w.Header().Set("HX-Redirect", "/game/"+gameCode)
 }
 
@@ -70,6 +75,7 @@ func main() {
 	http.Handle("/new", http.RedirectHandler("/game/"+rd.NewRoom(), http.StatusTemporaryRedirect))
 	http.HandleFunc("/game/", serveGamePage)
 	http.HandleFunc("/join", handleJoinForm)
+	http.HandleFunc("/random", handleRandomGame)
 
 	http.Handle("/ws", websocket.Handler(rd.HandleNewPlayer))
 

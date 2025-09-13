@@ -47,5 +47,12 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (event) => {
-  console.log("Message from server:", event.data);
+  const { player1, player2, ballX, ballY } = JSON.parse(event.data);
+  data = {
+    ...data,
+    ball: {...data.ball,
+      x: ballX,
+      y: ballY
+    },
+  };
 };

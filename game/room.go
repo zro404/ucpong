@@ -1,19 +1,27 @@
 package game
 
 import (
+	"time"
+
 	"golang.org/x/net/websocket"
 )
 
-type RoomDirectory map[string]*Room
+type RoomDirectory struct {
+	Rooms map[string]*Room
+}
 
 func NewRoomDirectory() *RoomDirectory {
-	return &RoomDirectory{}
+	return &RoomDirectory{
+		Rooms: make(map[string]*Room),
+	}
 }
 
 type Room struct {
 	p1   *Player
 	p2   *Player
 	ball *Ball
+
+	isOpen bool // Used for Random Matchmaking
 }
 
 func (room *Room) broadcastState() {
@@ -33,22 +41,42 @@ func (room *Room) broadcastState() {
 
 func (room *Room) StartGame() {
 	ball := room.ball
-	ball.vx = 10
-	ball.vy = 10
 
 	for {
-		ball.x += ball.vx
-		ball.y += ball.vy
+		if room.IsFull() {
+			ball.x += ball.vx
+			ball.y += ball.vy
 
-		if ball.y > 100 || ball.y < -100 {
-			ball.vy = -ball.vy
+			if ball.y > HEIGHT-RADIUS || ball.y < RADIUS {
+				ball.vy = -ball.vy
+			}
+
+			if ball.x > WIDTH-RADIUS || ball.x < RADIUS {
+				ball.vx = -ball.vx
+			}
+			room.broadcastState()
+			time.Sleep(time.Second / 30)
+		} else {
+			// TODO Send "Player left the game", Reset Game
+			break
 		}
-		room.broadcastState()
 	}
 }
 
 func (room *Room) IsFull() bool {
 	return room.p1 != nil && room.p2 != nil
+}
+
+func (room *Room) RemovePlayer(player *Player) bool {
+	if room.p1 == player {
+		room.p1 = nil
+		return true
+	} else if room.p2 == player {
+		room.p2 = nil
+		return true
+	}
+
+	return false
 }
 
 func (room *Room) AddPlayer(ws *websocket.Conn) (*Player, bool) {
@@ -58,9 +86,6 @@ func (room *Room) AddPlayer(ws *websocket.Conn) (*Player, bool) {
 		return player, true
 	} else if room.p2 == nil {
 		room.p2 = player
-		// Start the game
-		go room.StartGame()
-
 		return player, true
 	}
 
@@ -70,17 +95,18 @@ func (room *Room) AddPlayer(ws *websocket.Conn) (*Player, bool) {
 func (rd *RoomDirectory) NewRoom() string {
 	code := randRoomCode()
 	for {
-		_, ok := (*rd)[code]
+		_, ok := (*rd).Rooms[code]
 		if !ok {
 			break
 		}
 		code = randRoomCode()
 	}
 
-	(*rd)[code] = &Room{
-		p1:   nil,
-		p2:   nil,
-		ball: NewBall(),
+	(*rd).Rooms[code] = &Room{
+		p1:     nil,
+		p2:     nil,
+		ball:   NewBall(),
+		isOpen: true,
 	}
 
 	return code
@@ -97,7 +123,7 @@ func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {
 		return
 	}
 
-	room, ok := (*rd)[req.RoomCode]
+	room, ok := (*rd).Rooms[req.RoomCode]
 
 	if !ok {
 		websocket.JSON.Send(ws, ErrorMsg{false, "Invalid Room Code!"})
@@ -112,5 +138,23 @@ func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {
 		return
 	}
 
+	if room.IsFull() {
+		go room.StartGame()
+	}
+
 	player.readLoop()
+
+	// Remove Player from room
+	room.RemovePlayer(player)
+
+}
+
+func (rd *RoomDirectory) FindGame() string {
+	for k, room := range (*rd).Rooms {
+		if room.isOpen && !room.IsFull() {
+			return k
+		}
+	}
+
+	return rd.NewRoom()
 }
