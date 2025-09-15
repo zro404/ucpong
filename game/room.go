@@ -21,7 +21,41 @@ type Room struct {
 	p2   *Player
 	ball *Ball
 
+	isRunning bool
+
 	isOpen bool // Used for Random Matchmaking
+}
+
+func (rd *RoomDirectory) NewRoom() string {
+	code := randRoomCode()
+	for {
+		_, ok := (*rd).Rooms[code]
+		if !ok {
+			break
+		}
+		code = randRoomCode()
+	}
+
+	(*rd).Rooms[code] = &Room{
+		p1:        nil,
+		p2:        nil,
+		ball:      NewBall(),
+		isOpen:    true,
+		isRunning: false,
+	}
+
+	return code
+
+}
+
+func (room *Room) Reset() {
+	room.ball.reset()
+	if room.p1 != nil {
+		room.p1.reset()
+	}
+	if room.p2 != nil {
+		room.p2.reset()
+	}
 }
 
 func (room *Room) broadcastState() {
@@ -44,20 +78,37 @@ func (room *Room) StartGame() {
 
 	for {
 		if room.IsFull() {
-			ball.x += ball.vx
-			ball.y += ball.vy
+			if room.isRunning {
+				ball.x += ball.vx
+				ball.y += ball.vy
 
-			if ball.y > HEIGHT-RADIUS || ball.y < RADIUS {
-				ball.vy = -ball.vy
-			}
+				if ball.y > HEIGHT-RADIUS || ball.y < RADIUS {
+					ball.vy = -ball.vy
+				}
 
-			if ball.x > WIDTH-RADIUS || ball.x < RADIUS {
-				ball.vx = -ball.vx
+				if (ball.y > room.p1.pos-PADDLE_HEIGHT/2 && ball.y < room.p1.pos+PADDLE_HEIGHT/2 && ball.x < PADDLE_WIDTH+RADIUS) ||
+					(ball.y > room.p2.pos-PADDLE_HEIGHT/2 && ball.y < room.p2.pos+PADDLE_HEIGHT/2 && ball.x > WIDTH-PADDLE_WIDTH-RADIUS) {
+					ball.vx = -ball.vx
+				}
+
+				if ball.x >= WIDTH || ball.x <= 0 {
+					// Game Over
+					room.isRunning = false
+					room.Reset()
+				}
+
+				room.broadcastState()
+				time.Sleep(time.Second / 30)
+			} else {
+				if room.p1.ready || room.p2.ready {
+					room.isRunning = true
+				}
 			}
-			room.broadcastState()
-			time.Sleep(time.Second / 30)
 		} else {
 			// TODO Send "Player left the game", Reset Game
+			room.isRunning = false
+			room.Reset()
+			room.broadcastState()
 			break
 		}
 	}
@@ -90,27 +141,6 @@ func (room *Room) AddPlayer(ws *websocket.Conn) (*Player, bool) {
 	}
 
 	return nil, false
-}
-
-func (rd *RoomDirectory) NewRoom() string {
-	code := randRoomCode()
-	for {
-		_, ok := (*rd).Rooms[code]
-		if !ok {
-			break
-		}
-		code = randRoomCode()
-	}
-
-	(*rd).Rooms[code] = &Room{
-		p1:     nil,
-		p2:     nil,
-		ball:   NewBall(),
-		isOpen: true,
-	}
-
-	return code
-
 }
 
 func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {

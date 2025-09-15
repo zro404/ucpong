@@ -4,9 +4,11 @@ const ctx = canvas.getContext("2d");
 const height = canvas.height;
 const width = canvas.width;
 
+var syncEnabled = true;
+
 let data = {
-  p1: { x: 5, y: (height - 100) / 2, width: 25, height: 100 },
-  p2: { x: width - 30, y: (height - 100) / 2, width: 25, height: 100 },
+  p1: { x: 0, y: (height - 50) / 2, width: 25, height: 150 },
+  p2: { x: width - 25, y: (height - 50) / 2, width: 25, height: 150 },
   ball: { x: (width - 15) / 2, y: (height - 15) / 2, radius: 15 },
 };
 
@@ -14,10 +16,10 @@ const animationLoop = () => {
   ctx.clearRect(0, 0, width, height);
 
   ctx.fillStyle = "#0000FF";
-  ctx.fillRect(data.p1.x, data.p1.y, data.p1.width, data.p1.height);
+  ctx.fillRect(data.p1.x, data.p1.y - data.p1.height / 2, data.p1.width, data.p1.height);
 
   ctx.fillStyle = "#FF0000";
-  ctx.fillRect(data.p2.x, data.p2.y, data.p2.width, data.p2.height);
+  ctx.fillRect(data.p2.x, data.p2.y - data.p2.height / 2, data.p2.width, data.p2.height);
 
   ctx.fillStyle = "#FFFFFF";
   ctx.beginPath();
@@ -44,15 +46,39 @@ ws.onopen = () => {
   const roomCode =
     pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
   ws.send(JSON.stringify({ roomCode }));
+
+  document.addEventListener("keydown", (event) => {
+      let action;
+      switch (event.key) {
+        case "ArrowUp":
+          action = 2;
+          break;
+        case "ArrowDown":
+          action = 1;
+          break;
+        case " ":
+          action = 3;
+          break;
+      }
+
+    if (syncEnabled || action === 3) {
+      console.log("Sending action:", action);
+      ws.send(JSON.stringify({ action }));
+      syncEnabled = false;
+    }
+  });
 };
 
 ws.onmessage = (event) => {
   const { player1, player2, ballX, ballY } = JSON.parse(event.data);
   data = {
-    ...data,
-    ball: {...data.ball,
+    p1: { ...data.p1, y: player1 },
+    p2: { ...data.p2, y: player2 },
+    ball: {
+      ...data.ball,
       x: ballX,
       y: ballY
     },
   };
+  syncEnabled = true;
 };
