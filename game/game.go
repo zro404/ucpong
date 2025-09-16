@@ -1,6 +1,8 @@
 package game
 
 import (
+	"sync"
+
 	"golang.org/x/net/websocket"
 )
 
@@ -32,11 +34,13 @@ func (b *Ball) reset() {
 type Player struct {
 	conn  *websocket.Conn
 	pos   int
+	score int
 	ready bool
+	lock  sync.Mutex
 }
 
 func NewPlayer(ws *websocket.Conn) *Player {
-	return &Player{ws, HEIGHT / 2, false}
+	return &Player{ws, HEIGHT / 2, 0, false, sync.Mutex{}}
 }
 
 func (p *Player) reset() {
@@ -49,7 +53,9 @@ func (p *Player) readLoop() {
 		var msg PlayerInput
 		err := websocket.JSON.Receive(p.conn, &msg)
 		if err != nil {
+			p.lock.Lock()
 			p.conn.Close()
+			p.lock.Unlock()
 			return
 		}
 

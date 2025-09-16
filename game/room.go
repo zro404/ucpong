@@ -58,17 +58,42 @@ func (room *Room) Reset() {
 	}
 }
 
-func (room *Room) broadcastState() {
-	state := GameState{
-		BallX:   room.ball.x,
-		BallY:   room.ball.y,
-		Player1: room.p1.pos,
-		Player2: room.p2.pos,
+func (room *Room) broadcastDisconnect() {
+	state := GameState{Disconnect, 0, 0, 0, 0, 0, 0}
+
+	if room.p1 == nil {
+		if room.p2 != nil {
+			websocket.JSON.Send(room.p2.conn, state)
+		}
 	}
-	if room.p1 != nil {
+	if room.p2 == nil {
+		if room.p1 != nil {
+			websocket.JSON.Send(room.p1.conn, state)
+		}
+	}
+}
+
+func (room *Room) broadcastState() {
+	var broadcastType BroadcastType
+	if room.isRunning {
+		broadcastType = InProgress
+	} else {
+		broadcastType = GameOver
+	}
+
+	state := GameState{
+		Type:         broadcastType,
+		BallX:        room.ball.x,
+		BallY:        room.ball.y,
+		PlayerPos1:   room.p1.pos,
+		PlayerPos2:   room.p2.pos,
+		PlayerScore1: room.p1.score,
+		PlayerScore2: room.p2.score,
+	}
+	if room.p1 != nil || room.p1.conn != nil {
 		websocket.JSON.Send(room.p1.conn, state)
 	}
-	if room.p2 != nil {
+	if room.p2 != nil || room.p2.conn != nil {
 		websocket.JSON.Send(room.p2.conn, state)
 	}
 }
@@ -78,6 +103,8 @@ func (room *Room) StartGame() {
 
 	for {
 		if room.IsFull() {
+			room.p1.lock.Lock()
+			room.p2.lock.Lock()
 			if room.isRunning {
 				ball.x += ball.vx
 				ball.y += ball.vy
@@ -86,8 +113,13 @@ func (room *Room) StartGame() {
 					ball.vy = -ball.vy
 				}
 
-				if (ball.y > room.p1.pos-PADDLE_HEIGHT/2 && ball.y < room.p1.pos+PADDLE_HEIGHT/2 && ball.x < PADDLE_WIDTH+RADIUS) ||
-					(ball.y > room.p2.pos-PADDLE_HEIGHT/2 && ball.y < room.p2.pos+PADDLE_HEIGHT/2 && ball.x > WIDTH-PADDLE_WIDTH-RADIUS) {
+				if ball.y > room.p1.pos-PADDLE_HEIGHT/2 && ball.y < room.p1.pos+PADDLE_HEIGHT/2 && ball.x < PADDLE_WIDTH+RADIUS {
+					room.p1.score++
+					ball.vx = -ball.vx
+				}
+
+				if ball.y > room.p2.pos-PADDLE_HEIGHT/2 && ball.y < room.p2.pos+PADDLE_HEIGHT/2 && ball.x > WIDTH-PADDLE_WIDTH-RADIUS {
+					room.p2.score++
 					ball.vx = -ball.vx
 				}
 
@@ -99,17 +131,18 @@ func (room *Room) StartGame() {
 
 				room.broadcastState()
 				time.Sleep(time.Second / 30)
+
 			} else {
-				if room.p1.ready || room.p2.ready {
+				if room.p1.ready && room.p2.ready {
 					room.isRunning = true
 				}
 			}
+			room.p1.lock.Unlock()
+			room.p2.lock.Unlock()
 		} else {
-			// TODO Send "Player left the game", Reset Game
+			// Player left the game
 			room.isRunning = false
-			room.Reset()
-			room.broadcastState()
-			break
+			return
 		}
 	}
 }
@@ -118,11 +151,17 @@ func (room *Room) IsFull() bool {
 	return room.p1 != nil && room.p2 != nil
 }
 
+func (room *Room) IsEmpty() bool {
+	return room.p1 == nil && room.p2 == nil
+}
+
 func (room *Room) RemovePlayer(player *Player) bool {
 	if room.p1 == player {
+		room.p1.lock.Lock()
 		room.p1 = nil
 		return true
 	} else if room.p2 == player {
+		room.p2.lock.Lock()
 		room.p2 = nil
 		return true
 	}
@@ -174,9 +213,14 @@ func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {
 
 	player.readLoop()
 
-	// Remove Player from room
 	room.RemovePlayer(player)
+	room.broadcastDisconnect()
 
+	if room.IsEmpty() {
+		delete((*rd).Rooms, req.RoomCode)
+	} else {
+		room.isOpen = true
+	}
 }
 
 func (rd *RoomDirectory) FindGame() string {

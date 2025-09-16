@@ -1,3 +1,10 @@
+const p1Score = document.getElementById("p1-score");
+const p2Score = document.getElementById("p2-score");
+
+const modal = document.getElementById("modal");
+const modalMessage = document.getElementById("modal-text");
+const modalButton = document.getElementById("modal-button");
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -7,8 +14,8 @@ const width = canvas.width;
 var syncEnabled = true;
 
 let data = {
-  p1: { x: 0, y: (height - 50) / 2, width: 25, height: 150 },
-  p2: { x: width - 25, y: (height - 50) / 2, width: 25, height: 150 },
+  p1: { x: 0, y: height / 2, width: 25, height: 150, score: 0 },
+  p2: { x: width - 25, y: height / 2, width: 25, height: 150, score: 0 },
   ball: { x: (width - 15) / 2, y: (height - 15) / 2, radius: 15 },
 };
 
@@ -40,6 +47,10 @@ ws.onclose = () => {
   console.log("WebSocket connection closed");
 };
 
+window.onbeforeunload = () => {
+  ws.close();
+};
+
 ws.onopen = () => {
   console.log("WebSocket connection established");
   const pathParts = window.location.pathname.split("/");
@@ -56,13 +67,9 @@ ws.onopen = () => {
         case "ArrowDown":
           action = 1;
           break;
-        case " ":
-          action = 3;
-          break;
       }
 
-    if (syncEnabled || action === 3) {
-      console.log("Sending action:", action);
+    if (syncEnabled) {
       ws.send(JSON.stringify({ action }));
       syncEnabled = false;
     }
@@ -70,10 +77,34 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (event) => {
-  const { player1, player2, ballX, ballY } = JSON.parse(event.data);
+  const parsedData = JSON.parse(event.data);
+  const {type} = parsedData;
+
+  console.log(type)
+
+  switch(type) {
+    case "disconnect":
+      showModal("Opponent disconnected!", "NEW GAME", () => {
+        ws.close();
+        window.location.href = "/";
+      });
+      return;
+    case "gameOver":
+      const winner = parsedData.playerScore1 > parsedData.playerScore2 ? "Player 1" : "Player 2";
+      showModal(`${winner} wins!`, "PLAY AGAIN", () => {
+        ws.send(JSON.stringify({ action: 3 }));
+      });
+      break;
+    case "inProgress":
+      break;
+    default:
+      console.error("Unknown message type:", type);
+  }
+
+  const { playerPos1, playerPos2, playerScore1, playerScore2, ballX, ballY } = parsedData;
   data = {
-    p1: { ...data.p1, y: player1 },
-    p2: { ...data.p2, y: player2 },
+    p1: { ...data.p1, y: playerPos1, score: playerScore1 },
+    p2: { ...data.p2, y: playerPos2, score: playerScore2 },
     ball: {
       ...data.ball,
       x: ballX,
@@ -81,4 +112,18 @@ ws.onmessage = (event) => {
     },
   };
   syncEnabled = true;
+
+  p1Score.textContent = playerScore1;
+  p2Score.textContent = playerScore2;
+};
+
+const showModal = (message, buttonText, handler) => {
+  modalMessage.textContent = message;
+  modalButton.textContent = buttonText;
+  modal.classList.remove("hidden");
+
+  modalButton.onclick = () => {
+    modal.classList.add("hidden");
+    handler();
+  };
 };
