@@ -58,6 +58,13 @@ func (room *Room) Reset() {
 	}
 }
 
+func (room *Room) broadcastPlayerConnect() {
+	state := GameState{Connect, 0, 0, 0, 0, 0, 0}
+
+	websocket.JSON.Send(room.p1.conn, state)
+	websocket.JSON.Send(room.p2.conn, state)
+}
+
 func (room *Room) broadcastDisconnect() {
 	state := GameState{Disconnect, 0, 0, 0, 0, 0, 0}
 
@@ -208,6 +215,7 @@ func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {
 	}
 
 	if room.IsFull() {
+		room.broadcastPlayerConnect()
 		go room.StartGame()
 	}
 
@@ -215,12 +223,7 @@ func (rd *RoomDirectory) HandleNewPlayer(ws *websocket.Conn) {
 
 	room.RemovePlayer(player)
 	room.broadcastDisconnect()
-
-	if room.IsEmpty() {
-		delete((*rd).Rooms, req.RoomCode)
-	} else {
-		room.isOpen = true
-	}
+	delete((*rd).Rooms, req.RoomCode)
 }
 
 func (rd *RoomDirectory) FindGame() string {

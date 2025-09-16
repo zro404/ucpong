@@ -16,6 +16,7 @@ type PlayerInput struct {
 type BroadcastType string
 
 const (
+	Connect    BroadcastType = "connect"
 	InProgress BroadcastType = "inProgress"
 	GameOver   BroadcastType = "gameOver"
 	Disconnect BroadcastType = "disconnect"

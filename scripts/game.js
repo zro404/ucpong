@@ -80,12 +80,15 @@ ws.onmessage = (event) => {
   const parsedData = JSON.parse(event.data);
   const {type} = parsedData;
 
-  console.log(type)
-
   switch(type) {
+    case "connect":
+      showModal("Opponent connected!", "START", () => {
+        ws.send(JSON.stringify({ action: 3 }));
+        showModal("Waiting for opponent input", "CANCEL", () => {});
+      });
+      break;
     case "disconnect":
       showModal("Opponent disconnected!", "NEW GAME", () => {
-        ws.close();
         window.location.href = "/";
       });
       return;
@@ -96,6 +99,7 @@ ws.onmessage = (event) => {
       });
       break;
     case "inProgress":
+      modal.classList.add("hidden");
       break;
     default:
       console.error("Unknown message type:", type);
@@ -127,3 +131,7 @@ const showModal = (message, buttonText, handler) => {
     handler();
   };
 };
+
+showModal("Waiting for opponent...", "CANCEL", () => {
+  window.location.href = "/";
+});
