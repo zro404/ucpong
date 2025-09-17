@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -80,5 +81,9 @@ func main() {
 	http.Handle("/ws", websocket.Handler(rd.HandleNewPlayer))
 
 	registerPartialRoutes()
+
+	fmt.Println("\033[1;97mLive\033[0m @ \033[1;96m http://localhost:8000 \033[0m")
+	fmt.Println("press \033[1;97mCTRL + C\033[0m to exit")
+
 	http.ListenAndServe(":8000", nil)
 }

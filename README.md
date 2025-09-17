@@ -23,7 +23,7 @@ go mod tidy
 
 #### 3. Run the Server
 ```bash
-go run main.go
+go run .
 ```
 #### visit http://localhost:8000
 
