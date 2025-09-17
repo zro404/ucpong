@@ -1,3 +1,6 @@
+const pathParts = window.location.pathname.split("/");
+const roomCode = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+
 const p1Score = document.getElementById("p1-score");
 const p2Score = document.getElementById("p2-score");
 
@@ -10,6 +13,12 @@ const ctx = canvas.getContext("2d");
 
 const height = canvas.height;
 const width = canvas.width;
+
+document.getElementById("room-code").value = roomCode;
+document.getElementById("copy-button").onclick = () => {
+  navigator.clipboard.writeText(roomCode);
+};
+
 
 var syncEnabled = true;
 
@@ -53,9 +62,6 @@ window.onbeforeunload = () => {
 
 ws.onopen = () => {
   console.log("WebSocket connection established");
-  const pathParts = window.location.pathname.split("/");
-  const roomCode =
-    pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
   ws.send(JSON.stringify({ roomCode }));
 
   document.addEventListener("keydown", (event) => {

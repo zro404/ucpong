@@ -3,12 +3,20 @@
   {{ template "head.html" }}
   <body id="root" class="bg-black text-white h-svh">
     <div class="p-8 pt-10 h-svh">
-      <a
-        href="/"
-        class="z-10 absolute w-fit h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded"
-      >
-        BACK TO MENU
-      </a>
+      <div class="left-0 px-8 z-10 absolute w-full flex justify-between items-center">
+        <a
+          href="/"
+          class="w-fit h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded"
+        >
+          BACK TO MENU
+        </a>
+        <div class="flex items-center gap-2">
+          <input type="text" readonly id="room-code" class="rounded border-2 border-gray-300 text-red-500 bg-black text-center w-32 h-14 ml-4" />
+          <button id="copy-button" class="w-fit h-14 text-lg border-2 border-gray-300 hover:bg-red-700 hover:border-gray-300 transition-colors px-6 py-3 rounded">
+            COPY
+          </button>
+        </div>
+      </div>
       <div
         class="flex flex-col justify-center items-center gap-10 h-full pb-20"
       >
